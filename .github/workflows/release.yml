@@ -1,0 +1,48 @@
+name: 'C++ CI'
+
+on:
+  push:
+    tags:
+      - "v0.0.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Bazel
+        run: |
+          sudo apt-get install --yes apt-transport-https curl gnupg
+          curl -fsSL https://bazel.build/bazel-release.pub.gpg | gpg --dearmor >bazel-archive-keyring.gpg
+          sudo mv bazel-archive-keyring.gpg /usr/share/keyrings
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/bazel-archive-keyring.gpg] https://storage.googleapis.com/bazel-apt stable jdk1.8" | sudo tee /etc/apt/sources.list.d/bazel.list
+          sudo apt-get update --yes
+          sudo apt-get install --yes bazel
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Compute name and version
+        run: |
+          echo "NAME=homework" >> "$GITHUB_ENV" # shell expansion
+          echo "VERSION=${GITHUB_REF_NAME:5}" >> "$GITHUB_ENV"
+
+      - name: Name
+        run: echo "${{ env.NAME }}"
+
+      - name: Version
+        run: echo "${{ env.VERSION }}"
+
+      - name: Build
+        run: bazel build --cxxopt=-std=c++14 "//src:${{ env.NAME }}_deb" --define VERSION=${{ env.VERSION }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            bazel-bin/src/${{ env.NAME }}-0.0.${{ env.VERSION }}-Linux.deb
+
+      - name: Check
+        run: |
+          sudo apt-get install --yes ./bazel-bin/src/${{ env.NAME }}-0.0.${{ env.VERSION }}-Linux.deb
+          echo
+          echo "OK"
