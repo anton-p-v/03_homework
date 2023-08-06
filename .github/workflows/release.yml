@@ -45,4 +45,5 @@ jobs:
         run: |
           sudo apt-get install --yes ./bazel-bin/src/${{ env.NAME }}-0.0.${{ env.VERSION }}-Linux.deb
           echo
-          echo "OK"
+          ${{ env.NAME }}
+          echo

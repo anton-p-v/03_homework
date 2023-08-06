@@ -8,6 +8,7 @@ cc_binary(
     ],
     deps = [
         "//src/version",
+        "//src/factorial",
     ],
 )
 
